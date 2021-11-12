@@ -24,7 +24,8 @@ behaviorfilename = 'pt_01_postOpDay2_PDil';
 ephysfilename = 'PO_Day_04.nwb';
 
 %% MATLAB ANALYSIS CODE LOAD IN BELOW
-fullfile('/Users','andytekriwal','Desktop','git','emuanalyses_personalrepo', 'pdil');
+maindir = fullfile('/Users','andytekriwal','Box','EMU','STUDY_PDIL',ptPlaceholder, 'Behavioral Data', 'processed'); % maindir = uigetdir();
+ fullfile('/Users','andytekriwal','Desktop','git','personalToolbox');
 addpath(genpath(gitgenpersonalToolbox_path))
 
 %% BEHAVIOR DATA LOAD IN BELOW
@@ -40,14 +41,18 @@ addpath(genpath(gitgenpersonalToolbox_path))
 EMUanalysis_path = fullfile('/Users','andytekriwal','Desktop','emu_analysis');
 addpath(genpath(EMUanalysis_path))
 
+%% load in nwb file
+
 % Locate nwb file 
+
 maindir = fullfile('/Users','andytekriwal','Box','EMU','STUDY_PDIL',ptPlaceholder, 'SEEG', 'processed'); % maindir = uigetdir();
 cd(maindir);
-% load in nwb file
+
 generateCore()
+
 nwb_pdil = nwbRead(fullfile('/Users','andytekriwal','Box','EMU','STUDY_PDIL',ptPlaceholder, 'SEEG', 'processed', ephysfilename));
 
-%% note EC has put the data under 'processing', 
+%note EC has put the data under 'processing', 
 dat = nwb.acquisition.get('wire_14_electrode_5').data.load;
 trials = nwb.intervals_trials.loadAll;
 
