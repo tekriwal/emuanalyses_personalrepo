@@ -3,12 +3,21 @@
 %starting on 2/3/22
 
 %README: purpose of script is to generate behavioral comparisons between
-%the six task participants we have as of 2/3/22
+%the six task participants we have as of 2/3/22. There are a few key places
+%where we can alter the code. Namely, which trials in the block we want to
+%investigate ('endtrial' and 'starttrial') and if we want to
+%skip specific blocks from a patient (specifically pt 4, but atm we've
+%elected to keep all data from pt)
 
 
 
 
 dbstop if error
+%below two vars tell which trials in a given session we should concentrate
+%on, may want to change based on exactly what we're looking at
+starttrial = 1;
+endtrial = 15;
+
 
 pdilBehaviorStruct = struct();
 
@@ -250,7 +259,7 @@ for blocknumberindex = 1:length(inputlist)
         initiateTrial-CandDpromptResponseGiven;
     
     pdilBehaviorStruct(blocknumberindex).CorDselection_to_doneSeeingOpponentsChoice_startstop = ... %time from when C/D response given and until clicked past opponent's response
-        CandDpromptResponseGiven-doneSeeingOpponentsChoice;
+        doneSeeingOpponentsChoice - CandDpromptResponseGiven;
     
     pdilBehaviorStruct(blocknumberindex).CorDrxntime = ... %reaction time for participant
         CandDpromptResponseGiven - CandDpromptResponseRequest;
@@ -259,23 +268,32 @@ end
 
 Player1_percCooperated = zeros(length(pdilBehaviorStruct),1);
 Player2_percCooperated = Player1_percCooperated; 
+CorDrxntime = Player1_percCooperated; 
+CorDselection_to_doneSeeingOpponentsChoice_startstop = Player1_percCooperated; 
 
-starttrial = 1;
-endtrial = 15;
 totaltrials = endtrial - starttrial + 1;
 for mm = 1:length(pdilBehaviorStruct)
     
     Player1_percCooperated(mm) = ((sum(pdilBehaviorStruct(mm).choice_matrix_player1_logical(starttrial:endtrial)))/totaltrials)*100;
     Player2_percCooperated(mm) = ((sum(pdilBehaviorStruct(mm).choice_matrix_player2_logical(starttrial:endtrial)))/totaltrials)*100;
-    CorDrxntime(mm) = ((sum(pdilBehaviorStruct(mm).CorDrxntime(starttrial:endtrial)))/totaltrials);
+%     CorDrxntime(mm) = ((sum(pdilBehaviorStruct(mm).CorDrxntime(starttrial:endtrial)))/totaltrials);
     CorDrxntime(mm) = median(pdilBehaviorStruct(mm).CorDrxntime(starttrial:endtrial));
+%     CorDselection_to_doneSeeingOpponentsChoice_startstop(mm) = ((sum(pdilBehaviorStruct(mm).CorDselection_to_doneSeeingOpponentsChoice_startstop(starttrial:endtrial)))/totaltrials);
+    CorDselection_to_doneSeeingOpponentsChoice_startstop(mm) = median(pdilBehaviorStruct(mm).CorDselection_to_doneSeeingOpponentsChoice_startstop(starttrial:endtrial));
+  
     
     opponentstrat(mm,1) = pdilBehaviorStruct(mm).opponentstrat;
     opponent(mm,1) = pdilBehaviorStruct(mm).opponent;
     
-    probeResponse_playerAcoop(mm) = (str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(1))+str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(2))+str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(3)))/3;
-    probeResponse_playerAtrust(mm) = (str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(1))+str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(2))+str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(3)))/3;
+    probeResponse_playerAcoop(1,mm) = str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(1));
+    probeResponse_playerAcoop(2,mm) = str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(2));
+    probeResponse_playerAcoop(3,mm) = str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(3));
+    probeResponse_playerAcoop(4, mm) = (str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(1))+str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(2))+str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(3)))/3;
 
+     probeResponse_playerAtrust(1,mm) = str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(1));
+    probeResponse_playerAtrust(2,mm) = str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(2));
+    probeResponse_playerAtrust(3,mm) = str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(3));
+    probeResponse_playerAtrust(4, mm) = (str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(1))+str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(2))+str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(3)))/3;
         
     Slope_probeResponse_playerAcoop(1,mm) = str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(2)) - str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(1));       
     Slope_probeResponse_playerAcoop(2,mm) = str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(3)) - str2num(pdilBehaviorStruct(mm).probeResponse_playerAcoop(1));       
@@ -284,7 +302,40 @@ for mm = 1:length(pdilBehaviorStruct)
     Slope_probeResponse_playerAtrust(1,mm) = str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(2)) - str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(1));       
     Slope_probeResponse_playerAtrust(2,mm) = str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(3)) - str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(1));       
     Slope_probeResponse_playerAtrust(3,mm) = str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(3)) - str2num(pdilBehaviorStruct(mm).probeResponse_playerAtrust(2));       
-         
+
+% AT below 2/14/22. more sophisticated method of determining coop/defects
+    %fraction of opportunities that 'revenge' was taken
+    matrix1 = pdilBehaviorStruct(mm).choice_matrix_player1_logical(starttrial:endtrial)
+    matrix2 = pdilBehaviorStruct(mm).choice_matrix_player2_logical(starttrial:endtrial)
+    %find where opponent defected (but don't look at last trial)
+    finddef = find(matrix2(1:(endtrial-1))==0)
+    subjectresponseIndex = finddef + 1;
+    findresponses_binary = matrix1(subjectresponseIndex);
+    timesdefected_aftedDefectedOn = length(find(findresponses_binary==0))
+    fraction_timesdefected_aftedDefectedOn(mm) = timesdefected_aftedDefectedOn/length(finddef)
+ 
+    %fraction of times defection was unprovoked
+    matrix1 = pdilBehaviorStruct(mm).choice_matrix_player1_logical(starttrial:endtrial)
+    matrix2 = pdilBehaviorStruct(mm).choice_matrix_player2_logical(starttrial:endtrial)
+    %find where subject defected (not counting first trial)
+    finddefs = find(matrix1(2:end)==0) %so in reality, this pulls out the trialindex for the trial BEFORE when subject defects
+    oppresponseIndex = finddefs;
+    findresponses_binary2 = matrix2(oppresponseIndex);
+    timesdefected_withoutcause = length(find(findresponses_binary2==1))
+    fraction_timesdefected_withoutcause(mm) = timesdefected_withoutcause/length(finddefs)
+    
+    
+    if length(finddefs) == 0
+        fraction_timesdefected_withoutcause(mm) = 0;
+    end
+    
+    
+    %find where opponent defected
+    
+%     for zz = 1:(length(matrix1)-1)
+%         if matrix2(zz) == 0
+%         end
+%     end
       
 end
 
@@ -294,7 +345,7 @@ longersideInput = 600; %9/4/20, AT's attempt at Golden ratio calcs for size
 
 
 skippt05 = 0; %set to 0 to skip no sessions, set to .5 to skip the first session of pt 5 (the one he got competency query wrong), set to 1 to skip all of pt 5.
-
+% AT, as of 2/14/22, we want to NOT skip any sessions, so keep set to 0
 
 if skippt05 == 1
     skipPT05 = 3;
@@ -339,14 +390,26 @@ elseif skippt05 == 0
 %     
     
 end
+
+%%
+%%
+%%
+%% PLOTTING!
+
 %% BELOW IS LOOKING AT THE PERCENT OF TRIALS THE SUBJECT COOPERATED ON
+Ylim = [0 100];
 keymetric = Player1_percCooperated;
 %keymetric = probeResponse_playerAcoop 
 %keymetric = probeResponse_playerAtrust
-%keymetric = CorDrxntime
-
 ylabeltext = '% of trials in a block the player cooperated'; %, 'FontSize', 14);
 Ylim = [0 100];
+
+keymetric = fraction_timesdefected_aftedDefectedOn*100
+ylabeltext = '% of opportunities revenge taken'; %, 'FontSize', 14);
+
+keymetric = fraction_timesdefected_withoutcause*100 %this is very interested for vsCoop and vsDefect
+ylabeltext = '% of defects that were unprovoked'; %, 'FontSize', 14);
+
 
 % % Below compares the play of subject and opponents (not too useful)
 % keymetric = keymetric;
@@ -370,7 +433,7 @@ notpairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext,
 %strategies
 
 %within subject vscoop VS vsdefect
-keymetric = keymetric;
+keymetric = keymetric; clear pairedmat
 xlabel1text = 'vsCoop'; xlabel2text = 'vsDefect';
 ylabeltext = ylabeltext; %, 'FontSize', 14);
 %pt1 below
@@ -417,7 +480,7 @@ ylabeltext = ylabeltext; %, 'FontSize', 14);
 notpairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext, Ylim)
 
 %within subject vsperson VS vscomputer
-keymetric = keymetric;
+keymetric = keymetric; clear pairedmat
 xlabel1text = 'vsHuman'; xlabel2text = 'vsComp';
 ylabeltext = ylabeltext; %, 'FontSize', 14);
 %pt1 below
@@ -437,11 +500,11 @@ pairedmat(5,1) = mean([keymetric(20-skipPT05), keymetric(22-skipPT05)]);%vsperso
 pairedmat(5,2) = mean([keymetric(21-skipPT05), keymetric(23-skipPT05)]);%vscomputer (remember, no pt 4 here)
 %AT adding below 2/11/22 to include data from pt4
 if skippt05 == 0
-    pairedmat(5,1) = keymetric(16-skipPT05);%vshuman 
-    pairedmat(5,2) = mean([keymetric(15-skipPT05), keymetric(17-skipPT05)]);%vscomputer 
+    pairedmat(6,1) = keymetric(16-skipPT05);%vshuman 
+    pairedmat(6,2) = mean([keymetric(15-skipPT05), keymetric(17-skipPT05)]);%vscomputer 
 elseif skippt05 == 0.5
-    pairedmat(5,1) = keymetric(16-skipPT05);%vshuman 
-    pairedmat(5,2) = keymetric(17-skipPT05);%vscomputer 
+    pairedmat(6,1) = keymetric(16-skipPT05);%vshuman 
+    pairedmat(6,2) = keymetric(17-skipPT05);%vscomputer 
 end
 
 
@@ -455,33 +518,70 @@ pairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext, Yl
 
 2+2
 
-%%
 
-%we want to calculate the 'slope' of the line that connects the baseine
+%% BELOW IS LOOKING AT RXN TIMES
 
-% Slope_probeResponse_playerAcoop(1, mm) 
-% Slope_probeResponse_playerAcoop(2, mm)
-% Slope_probeResponse_playerAtrust(1, mm) 
-% Slope_probeResponse_playerAtrust(2, mm) 
+keymetric = CorDrxntime;
+ylabeltext = 'Time for C/D selection (seconds)'; %, 'FontSize', 14);
+Ylim = [0 6];
 
-% %pick from below pairs of options;
-keymetric = Slope_probeResponse_playerAtrust(1,:); 
-ylabeltext = 'Change in trust (block 1 to 2)'; %, 'FontSize', 14);
+keymetric = CorDselection_to_doneSeeingOpponentsChoice_startstop;
+ylabeltext = 'Time spent awaiting opp selection (seconds)'; %, 'FontSize', 14);
+Ylim = [6 10];
 
-keymetric = Slope_probeResponse_playerAtrust(2,:); 
-ylabeltext = 'Change in trust (block 1 to 3)'; %, 'FontSize', 14);
 
-keymetric = Slope_probeResponse_playerAtrust(3,:); 
-ylabeltext = 'Change in trust (block 2 to 3)'; %, 'FontSize', 14);
 
-keymetric = Slope_probeResponse_playerAcoop(1,:); 
-ylabeltext = 'Change in self assessed coop (block 1 to 2)'; %, 'FontSize', 14);
+% % Below compares the play of subject and opponents (not too useful)
+% keymetric = keymetric;
+% input2 = Player2_percCooperated;
+% xlabel1text = 'Subject'; 
+% xlabel2text = 'Opponent';
+% pairedplotting_helperfx(keymetric, input2, xlabel1text, xlabel2text, ylabeltext)
 
-keymetric = Slope_probeResponse_playerAcoop(2,:); 
-ylabeltext = 'Change in self assessed coop (block 1 to 3)'; %, 'FontSize', 14);
 
-keymetric = Slope_probeResponse_playerAcoop(3,:); 
-ylabeltext = 'Change in self assessed coop (block 2 to 3)'; %, 'FontSize', 14);
+% below is plot comparing cooperates to defects for whatever key variable
+index = find(opponentstrat=="coop");
+input1 = keymetric(index);
+index = find(opponentstrat=="defect");
+input2 = keymetric(index);
+xlabel1text = 'vsCoop'; 
+xlabel2text = 'vsDefect';
+ylabeltext = ylabeltext; %, 'FontSize', 14);
+notpairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext, Ylim)
+
+%below is for comparing within subject for against coop or defect
+%strategies
+
+%within subject vscoop VS vsdefect
+keymetric = keymetric; clear pairedmat
+xlabel1text = 'vsCoop'; xlabel2text = 'vsDefect';
+ylabeltext = ylabeltext; %, 'FontSize', 14);
+%pt1 below
+pairedmat(1,1) = mean([keymetric(1), keymetric(2), keymetric(5), keymetric(6)]);%vscoop 
+pairedmat(1,2) = mean([keymetric(3), keymetric(4)]);%vsdefect
+%pt2 below
+pairedmat(2,1) = mean([keymetric(7), keymetric(8)]);%vscoop
+pairedmat(2,2) = mean([keymetric(9), keymetric(10)]);%vsdefect
+%pt3 below
+pairedmat(3,1) = mean([keymetric(11), keymetric(12)]);%vscoop 
+pairedmat(3,2) = mean([keymetric(13), keymetric(14)]);%vsdefect
+% %pt5 below %has no blocks against a defective strat
+% pairedmat(4,1) = mean([keymetric(18), keymetric(19)]);%vscoop (no pt 4 here)
+% pairedmat(4,2) = nan;%vsdefect - none such trials 
+%pt6 below
+pairedmat(4,1) = mean([keymetric(20-skipPT05), keymetric(21-skipPT05)]);%vscoop 
+pairedmat(4,2) = mean([keymetric(22-skipPT05), keymetric(23-skipPT05)]);%vsdefect 
+%AT adding below 2/11/22 to include data from pt4
+if skippt05 == 0
+    pairedmat(5,1) = mean([keymetric(15-skipPT05), keymetric(16-skipPT05)]);%vscoop 
+    pairedmat(5,2) = keymetric(17-skipPT05);%vsdefect 
+elseif skippt05 == 0.5
+    pairedmat(5,1) = keymetric(16-skipPT05);%vscoop 
+    pairedmat(5,2) = keymetric(17-skipPT05);%vsdefect 
+end
+
+input1 = pairedmat(:,1); input2 = pairedmat(:,2);
+pairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext, Ylim)
 
 
 
@@ -490,17 +590,17 @@ ylabeltext = 'Change in self assessed coop (block 2 to 3)'; %, 'FontSize', 14);
 
 
 % below is plot comparing cooperates to defects for whatever key variable
-index = find(opponentstrat=="coop");
+index = find(opponent=="human");
 input1 = keymetric(index);
-index = find(opponentstrat=="defect");
+index = find(opponent=="computer");
 input2 = keymetric(index);
-xlabel1text = 'vs Coop'; 
-xlabel2text = 'vs Defect';
+xlabel1text = 'vsHuman'; 
+xlabel2text = 'vsComp';
 ylabeltext = ylabeltext; %, 'FontSize', 14);
-notpairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext)
+notpairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext, Ylim)
 
 %within subject vsperson VS vscomputer
-keymetric = keymetric;
+keymetric = keymetric; clear pairedmat
 xlabel1text = 'vsHuman'; xlabel2text = 'vsComp';
 ylabeltext = ylabeltext; %, 'FontSize', 14);
 %pt1 below
@@ -518,23 +618,89 @@ pairedmat(4,2) = keymetric(19-skipPT05);%vscomputer (remember, no pt 4 here)
 %pt6 below
 pairedmat(5,1) = mean([keymetric(20-skipPT05), keymetric(22-skipPT05)]);%vsperson (remember, no pt 4 here)
 pairedmat(5,2) = mean([keymetric(21-skipPT05), keymetric(23-skipPT05)]);%vscomputer (remember, no pt 4 here)
-input1 = pairedmat(:,1); input2 = pairedmat(:,2);
-pairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext)
+%AT adding below 2/11/22 to include data from pt4
+if skippt05 == 0
+    pairedmat(6,1) = keymetric(16-skipPT05);%vshuman 
+    pairedmat(6,2) = mean([keymetric(15-skipPT05), keymetric(17-skipPT05)]);%vscomputer 
+elseif skippt05 == 0.5
+    pairedmat(6,1) = keymetric(16-skipPT05);%vshuman 
+    pairedmat(6,2) = keymetric(17-skipPT05);%vscomputer 
+end
 
+
+
+input1 = pairedmat(:,1); input2 = pairedmat(:,2);
+pairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext, Ylim)
+
+
+
+
+
+2+2
+
+
+
+%% BELOW IS LOOKING AT CHANGES IN RESPONSES TO THE PROBE QUESTIONS
+
+%below is just the probe response questions themselves:
+Ylim = [1 9];
+ keymetric =    probeResponse_playerAcoop(1,:); 
+ ylabeltext = 'Self assessed coop level (block 1)';
+ keymetric =    probeResponse_playerAcoop(2,:); 
+ ylabeltext = 'Self assessed coop level (block 2)'; 
+  keymetric =    probeResponse_playerAcoop(3,:); 
+ ylabeltext = 'Self assessed coop level (block 3)';
+  keymetric =    probeResponse_playerAcoop(4,:); 
+ ylabeltext = 'Self assessed coop level (ave of all blocks)';
+ 
+ keymetric =    probeResponse_playerAtrust(1,:); 
+ ylabeltext = 'Trust in opponent (block 1)';
+ keymetric =    probeResponse_playerAtrust(2,:); 
+ ylabeltext = 'Trust in opponent (block 2)'; 
+  keymetric =    probeResponse_playerAtrust(3,:); 
+ ylabeltext = 'Trust in opponent (block 3)';
+  keymetric =    probeResponse_playerAtrust(4,:); 
+ ylabeltext = 'Trust in opponent (ave of all blocks)';
+ 
+ 
+% below we want to calculate the 'slope' of the line that connects the baseine
+
+Ylim = [-5 5];
+% %pick from below pairs of options;
+keymetric = Slope_probeResponse_playerAtrust(1,:); 
+ylabeltext = 'Change in trust (block 1 to 2)'; %, 'FontSize', 14);
+keymetric = Slope_probeResponse_playerAtrust(2,:); 
+ylabeltext = 'Change in trust (block 1 to 3)'; %, 'FontSize', 14);
+keymetric = Slope_probeResponse_playerAtrust(3,:); 
+ylabeltext = 'Change in trust (block 2 to 3)'; %, 'FontSize', 14);
+keymetric = mean([Slope_probeResponse_playerAtrust(1,:);Slope_probeResponse_playerAtrust(2,:)],1); 
+ylabeltext = 'Ave change in trust (1 to block2, 1 to block3)'; %, 'FontSize', 14);
+
+
+keymetric = Slope_probeResponse_playerAcoop(1,:); 
+ylabeltext = 'Change in self assessed coop (block 1 to 2)'; %, 'FontSize', 14);
+keymetric = Slope_probeResponse_playerAcoop(2,:); 
+ylabeltext = 'Change in self assessed coop (block 1 to 3)'; %, 'FontSize', 14);
+keymetric = Slope_probeResponse_playerAcoop(3,:); 
+ylabeltext = 'Change in self assessed coop (block 2 to 3)'; %, 'FontSize', 14);
 
 
 % below is plot comparing cooperates to defects for whatever key variable
-index = find(opponent=="human");
+index = find(opponentstrat=="coop");
 input1 = keymetric(index);
-index = find(opponent=="computer");
+index = find(opponentstrat=="defect");
 input2 = keymetric(index);
-xlabel1text = 'vsHuman'; 
-xlabel2text = 'vsComp';
+xlabel1text = 'vsCoop'; 
+xlabel2text = 'vsDefect';
 ylabeltext = ylabeltext; %, 'FontSize', 14);
-notpairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext)
+notpairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext, Ylim)
+
+
+%below is for comparing within subject for against coop or defect
+%strategies
 
 %within subject vscoop VS vsdefect
-keymetric = keymetric;
+keymetric = keymetric; clear pairedmat
 xlabel1text = 'vsCoop'; xlabel2text = 'vsDefect';
 ylabeltext = ylabeltext; %, 'FontSize', 14);
 %pt1 below
@@ -550,11 +716,80 @@ pairedmat(3,2) = mean([keymetric(13), keymetric(14)]);%vsdefect
 % pairedmat(4,1) = mean([keymetric(18), keymetric(19)]);%vscoop (no pt 4 here)
 % pairedmat(4,2) = nan;%vsdefect - none such trials 
 %pt6 below
-pairedmat(4,1) = mean([keymetric(20-skipPT05), keymetric(21-skipPT05)]);%vscoop (remember,no pt 4 or 5 here)
-pairedmat(4,2) = mean([keymetric(22-skipPT05), keymetric(23-skipPT05)]);%vsdefect (remember,no pt 4 or 5 here)
+pairedmat(4,1) = mean([keymetric(20-skipPT05), keymetric(21-skipPT05)]);%vscoop 
+pairedmat(4,2) = mean([keymetric(22-skipPT05), keymetric(23-skipPT05)]);%vsdefect 
+%AT adding below 2/11/22 to include data from pt4
+if skippt05 == 0
+    pairedmat(5,1) = mean([keymetric(15-skipPT05), keymetric(16-skipPT05)]);%vscoop 
+    pairedmat(5,2) = keymetric(17-skipPT05);%vsdefect 
+elseif skippt05 == 0.5
+    pairedmat(5,1) = keymetric(16-skipPT05);%vscoop 
+    pairedmat(5,2) = keymetric(17-skipPT05);%vsdefect 
+end
+
 input1 = pairedmat(:,1); input2 = pairedmat(:,2);
-pairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext)
+pairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext, Ylim)
+
+
+
+
+
+
+% below is plot comparing cooperates to defects for whatever key variable
+index = find(opponent=="human");
+input1 = keymetric(index);
+index = find(opponent=="computer");
+input2 = keymetric(index);
+xlabel1text = 'vsHuman'; 
+xlabel2text = 'vsComp';
+ylabeltext = ylabeltext; %, 'FontSize', 14);
+notpairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext, Ylim)
+
+%within subject vsperson VS vscomputer
+keymetric = keymetric; clear pairedmat
+xlabel1text = 'vsHuman'; xlabel2text = 'vsComp';
+ylabeltext = ylabeltext; %, 'FontSize', 14);
+%pt1 below
+pairedmat(1,1) = mean([keymetric(2), keymetric(4), keymetric(5)]);%vsperson 
+pairedmat(1,2) = mean([keymetric(1), keymetric(3), keymetric(6)]);%vscomp
+%pt2 below
+pairedmat(2,1) = mean([keymetric(8), keymetric(10)]);%vsperson
+pairedmat(2,2) = mean([keymetric(7), keymetric(9)]);%vscomp
+%pt3 below
+pairedmat(3,1) = mean([keymetric(12), keymetric(14)]);%vsperson 
+pairedmat(3,2) = mean([keymetric(11), keymetric(13)]);%vscomp
+%pt5 below
+pairedmat(4,1) = keymetric(18-skipPT05);%vsperson (remember, no pt 4 here)
+pairedmat(4,2) = keymetric(19-skipPT05);%vscomputer (remember, no pt 4 here)
+%pt6 below
+pairedmat(5,1) = mean([keymetric(20-skipPT05), keymetric(22-skipPT05)]);%vsperson (remember, no pt 4 here)
+pairedmat(5,2) = mean([keymetric(21-skipPT05), keymetric(23-skipPT05)]);%vscomputer (remember, no pt 4 here)
+%AT adding below 2/11/22 to include data from pt4
+if skippt05 == 0
+    pairedmat(6,1) = keymetric(16-skipPT05);%vshuman 
+    pairedmat(6,2) = mean([keymetric(15-skipPT05), keymetric(17-skipPT05)]);%vscomputer 
+elseif skippt05 == 0.5
+    pairedmat(6,1) = keymetric(16-skipPT05);%vshuman 
+    pairedmat(6,2) = keymetric(17-skipPT05);%vscomputer 
+end
+
+
+
+input1 = pairedmat(:,1); input2 = pairedmat(:,2);
+pairedplotting_helperfx(input1, input2, xlabel1text, xlabel2text, ylabeltext, Ylim)
+
 
 
 2+2
+
+%% more nuanced analyses:
+%calculate likelihood of retaliation, session by session
+
+%pseudocode:
+%set up some if/then statement to isolate:
+%1) subject response when on previous trial, opp defected
+%2) subject response when on previous trial, opp cooperated
+
+
+
 
